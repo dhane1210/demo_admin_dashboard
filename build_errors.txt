@@ -1,0 +1,43 @@
+﻿[96msrc/pages/Calendar.tsx[0m:[93m9[0m:[93m41[0m - [91merror[0m[90m TS6133: [0m'FiCalendar' is declared but its value is never read.
+
+[7m9[0m import { FiPlus, FiRefreshCw, FiTrash2, FiCalendar } from 'react-icons/fi'
+[7m [0m [91m                                        ~~~~~~~~~~[0m
+
+[96msrc/pages/Calendar.tsx[0m:[93m12[0m:[93m81[0m - [91merror[0m[90m TS6133: [0m'isSameMonth' is declared but its value is never read.
+
+[7m12[0m import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns'
+[7m  [0m [91m                                                                                ~~~~~~~~~~~[0m
+
+[96msrc/pages/Pricing.tsx[0m:[93m7[0m:[93m41[0m - [91merror[0m[90m TS6133: [0m'StatHelpText' is declared but its value is never read.
+
+[7m7[0m   Divider, Stat, StatLabel, StatNumber, StatHelpText,
+[7m [0m [91m                                        ~~~~~~~~~~~~[0m
+
+[96msrc/pages/Search.tsx[0m:[93m4[0m:[93m46[0m - [91merror[0m[90m TS6133: [0m'VStack' is declared but its value is never read.
+
+[7m4[0m   Button, Input, Select, SimpleGrid, HStack, VStack,
+[7m [0m [91m                                             ~~~~~~[0m
+
+[96msrc/pages/Shipments.tsx[0m:[93m6[0m:[93m34[0m - [91merror[0m[90m TS6133: [0m'Textarea' is declared but its value is never read.
+
+[7m6[0m   FormControl, FormLabel, Input, Textarea, SimpleGrid, VStack,
+[7m [0m [91m                                 ~~~~~~~~[0m
+
+[96msrc/pages/Shipments.tsx[0m:[93m7[0m:[93m11[0m - [91merror[0m[90m TS6133: [0m'Select' is declared but its value is never read.
+
+[7m7[0m   HStack, Select, Badge,
+[7m [0m [91m          ~~~~~~[0m
+
+[96msrc/pages/Shipments.tsx[0m:[93m7[0m:[93m19[0m - [91merror[0m[90m TS6133: [0m'Badge' is declared but its value is never read.
+
+[7m7[0m   HStack, Select, Badge,
+[7m [0m [91m                  ~~~~~[0m
+
+[96msrc/pages/Shipments.tsx[0m:[93m9[0m:[93m23[0m - [91merror[0m[90m TS6133: [0m'FiPlus' is declared but its value is never read.
+
+[7m9[0m import { FiRefreshCw, FiPlus, FiEye, FiTrash2, FiNavigation, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+[7m [0m [91m                      ~~~~~~[0m
+
+
+Found 8 errors.
+
