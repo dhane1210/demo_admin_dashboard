@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build frontend Docker image
+    cmds:
+      - |
+        docker build \
+          --build-arg VITE_API_URL=http://localhost:3000 \
+          --build-arg VITE_MAP_TILE_URL="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" \
+          --build-arg VITE_SUPPORT_EMAIL=admin@envio.lk \
+          -t nipunmalinga/logistics-demo-app-frontend:latest .
+
+  tag:
+    desc: Tag image (redundant but kept if needed)
+    cmds:
+      - docker tag nipunmalinga/logistics-demo-app-frontend:latest nipunmalinga/logistics-demo-app-frontend:latest
+
+  push:
+    desc: Push image to Docker Hub
+    cmds:
+      - docker push nipunmalinga/logistics-demo-app-frontend:latest
