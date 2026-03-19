@@ -102,7 +102,7 @@ export default function AppLayout() {
               </Box>
               <Box mr={2}>
                 <Text fontSize="sm" fontWeight="600" color="white">Admin</Text>
-                <Text fontSize="xs" color="#64748b">admin@envio.lk</Text>
+                <Text fontSize="xs" color="#64748b">{import.meta.env.VITE_SUPPORT_EMAIL || 'admin@envio.lk'}</Text>
               </Box>
               <Tooltip label="Logout">
                 <IconButton
