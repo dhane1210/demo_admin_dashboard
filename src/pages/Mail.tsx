@@ -8,9 +8,11 @@ import html2canvas from 'html2canvas'
 import { assignmentApi } from '../api/assignments'
 import { shipmentApi } from '../api/shipments'
 import { alertApi } from '../api/alerts'
+import { AUTH_TOKEN_KEY } from '../constants'
 import type { Assignment, Shipment, Alert } from '../types'
 import StatusBadge from '../components/StatusBadge'
 import ShipmentMap from '../components/ShipmentMap'
+import { PageHeader } from '../components/common'
 
 export default function Mail() {
   const [trackingId, setTrackingId] = useState('')
@@ -71,13 +73,15 @@ export default function Mail() {
       // we'll need to use the communicationApi for custom emails.
       // Assuming a communicationApi exists or using fetch directly since it's simple:
       
-      const token = localStorage.getItem('token')
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-      if (token) headers['Authorization'] = `Bearer ${token}`
+      const token = localStorage.getItem(AUTH_TOKEN_KEY)
       
-      const res = await fetch('/api/v1/communications/send', {
+      const baseUrl = import.meta.env.VITE_API_URL || ''
+      const res = await fetch(`${baseUrl}/api/v1/communications/send`, {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           template_id: 'custom',
           recipient_email: assignment.customer_email,
@@ -109,9 +113,7 @@ export default function Mail() {
 
   return (
     <Box>
-      <Flex justify="space-between" align="center" mb={5}>
-        <Text fontSize="lg" fontWeight="700" color="white">Automated Mail Manager</Text>
-      </Flex>
+      <PageHeader title="Automated Mail Manager" />
 
       <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
         {/* Left Column - Search & Context */}

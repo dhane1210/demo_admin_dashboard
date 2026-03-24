@@ -5,21 +5,14 @@ import Sidebar from './Sidebar'
 import { useEffect, useState } from 'react'
 import { alertApi } from '../../api/alerts'
 import InstructionsModal from '../InstructionsModal'
+import { PAGE_TITLES, AUTH_TOKEN_KEY } from '../../constants'
 
-const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
-  '/shipments': 'Shipments',
-  '/search': 'Search',
-  '/calendar': 'Calendar',
-  '/pricing': 'Pricing',
-  '/alerts': 'Alerts',
-  '/users': 'Users',
-}
+
 
 export default function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const pageTitle = pageTitles[location.pathname] || 'Envio Logistics'
+  const pageTitle = PAGE_TITLES[location.pathname] || 'Envio Logistics'
   const [unreadAlerts, setUnreadAlerts] = useState(0)
   const { isOpen, onOpen, onClose } = useDisclosure()
 
@@ -30,7 +23,7 @@ export default function AppLayout() {
   }, [location.pathname]) // Refresh count on navigation
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token')
+    localStorage.removeItem(AUTH_TOKEN_KEY)
     navigate('/login')
   }
 

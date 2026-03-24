@@ -1,20 +1,6 @@
 import { Box, Flex, Icon, Text, VStack, Image } from '@chakra-ui/react'
 import { NavLink, useLocation } from 'react-router-dom'
-import {
-  FiGrid, FiPackage, FiSearch, FiCalendar,
-  FiDollarSign, FiBell, FiUsers, FiMail,
-} from 'react-icons/fi'
-
-const navItems = [
-  { label: 'Dashboard', icon: FiGrid, path: '/' },
-  { label: 'Shipments', icon: FiPackage, path: '/shipments' },
-  { label: 'Search', icon: FiSearch, path: '/search' },
-  { label: 'Calendar', icon: FiCalendar, path: '/calendar' },
-  { label: 'Pricing', icon: FiDollarSign, path: '/pricing' },
-  { label: 'Alerts', icon: FiBell, path: '/alerts' },
-  { label: 'Users', icon: FiUsers, path: '/users' },
-  { label: 'Mail', icon: FiMail, path: '/mail' },
-]
+import { NAV_ITEMS } from '../../constants'
 
 export default function Sidebar() {
   const location = useLocation()
@@ -49,7 +35,7 @@ export default function Sidebar() {
 
       {/* Nav Items */}
       <VStack spacing={1} align="stretch" px={3} py={4}>
-        {navItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive = item.path === '/'
             ? location.pathname === '/'
             : location.pathname.startsWith(item.path)

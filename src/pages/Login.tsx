@@ -7,6 +7,7 @@ import {
 import { FiEye, FiEyeOff } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '../api/auth'
+import { AUTH_TOKEN_KEY } from '../constants'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -22,7 +23,7 @@ export default function Login() {
     try {
       const res = await authApi.login({ username, password })
       if (res.success && res.data?.token) {
-        localStorage.setItem('auth_token', res.data.token)
+        localStorage.setItem(AUTH_TOKEN_KEY, res.data.token)
         toast({ title: 'Welcome Back!', status: 'success', duration: 3000 })
         navigate('/')
       } else {

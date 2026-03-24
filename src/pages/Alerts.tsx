@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
-  Box, Table, Thead, Tbody, Tr, Th, Td, Text, Flex, Spinner,
+  Box, Table, Thead, Tbody, Tr, Th, Td, Text,
   IconButton, useToast, HStack, Select,
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
   useDisclosure, Button, Textarea, FormControl, FormLabel, VStack, SimpleGrid,
@@ -8,13 +8,10 @@ import {
 import { FiRefreshCw, FiCheck, FiCheckCircle, FiEye } from 'react-icons/fi'
 import { alertApi } from '../api/alerts'
 import type { Alert } from '../types'
-import StatusBadge from '../components/StatusBadge'
-import { format } from 'date-fns'
+import { fmtDateTime } from '../utils/formatters'
 
-function fmtDate(d: string | null) {
-  if (!d) return '—'
-  try { return format(new Date(d), 'dd MMM yyyy HH:mm') } catch { return d }
-}
+import { PageHeader, DataTableCard, EmptyStateRow } from '../components/common'
+import StatusBadge from '../components/StatusBadge'
 
 export default function Alerts() {
   const [alerts, setAlerts] = useState<Alert[]>([])
@@ -65,47 +62,45 @@ export default function Alerts() {
 
   return (
     <Box>
-      <Flex justify="space-between" align="center" mb={5}>
-        <Text fontSize="lg" fontWeight="700" color="white">Alerts & Notifications</Text>
-        <HStack spacing={3}>
-          <Select placeholder="All Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} size="sm" w="auto" borderRadius="8px">
-            <option value="OPEN">Open</option><option value="ACKNOWLEDGED">Acknowledged</option><option value="RESOLVED">Resolved</option>
-          </Select>
-          <Select placeholder="All Severity" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)} size="sm" w="auto" borderRadius="8px">
-            <option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option>
-          </Select>
-          <IconButton aria-label="Refresh" icon={<FiRefreshCw />} variant="ghost" size="sm" borderRadius="8px" onClick={load} />
-        </HStack>
-      </Flex>
+      <PageHeader
+        title="Alerts & Notifications"
+        actions={
+          <>
+            <Select placeholder="All Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} size="sm" w="auto" borderRadius="8px">
+              <option value="OPEN">Open</option><option value="ACKNOWLEDGED">Acknowledged</option><option value="RESOLVED">Resolved</option>
+            </Select>
+            <Select placeholder="All Severity" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)} size="sm" w="auto" borderRadius="8px">
+              <option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option>
+            </Select>
+            <IconButton aria-label="Refresh" icon={<FiRefreshCw />} variant="ghost" size="sm" borderRadius="8px" onClick={load} />
+          </>
+        }
+      />
 
-      <Box bg="surface.card" border="1px solid" borderColor="surface.border" borderRadius="14px" overflow="hidden">
-        {loading ? <Flex justify="center" py={16}><Spinner size="lg" color="brand.400" /></Flex> : (
-          <Box overflowX="auto">
-            <Table variant="simple" size="sm">
-              <Thead><Tr><Th>Type</Th><Th>Shipment</Th><Th>Info</Th><Th>Severity</Th><Th>Status</Th><Th>Detected</Th><Th>Actions</Th></Tr></Thead>
-              <Tbody>
-                {alerts.length === 0 ? <Tr><Td colSpan={7} textAlign="center" color="#64748b" py={8}>No alerts found.</Td></Tr> : alerts.map(a => (
-                  <Tr key={a.id} _hover={{ bg: 'surface.cardHover' }}>
-                    <Td><StatusBadge status={a.alert_type} /></Td>
-                    <Td fontWeight="600" color="white">{a.shipment_number || '—'}</Td>
-                    <Td color="#cbd5e1" maxW="300px" isTruncated>{a.alert_info || '—'}</Td>
-                    <Td><StatusBadge status={a.severity} /></Td>
-                    <Td><StatusBadge status={a.status} /></Td>
-                    <Td color="#94a3b8" fontSize="xs">{fmtDate(a.detection_date)}</Td>
-                    <Td>
-                      <HStack spacing={1}>
-                        <IconButton aria-label="View" icon={<FiEye />} variant="ghost" size="xs" onClick={() => viewDetail(a.id)} />
-                        {a.status === 'OPEN' && <IconButton aria-label="Ack" icon={<FiCheck />} variant="ghost" size="xs" color="#60a5fa" onClick={() => acknowledge(a.id)} />}
-                        {a.status !== 'RESOLVED' && <IconButton aria-label="Resolve" icon={<FiCheckCircle />} variant="ghost" size="xs" color="#4ade80" onClick={() => openResolve(a)} />}
-                      </HStack>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
-        )}
-      </Box>
+      <DataTableCard loading={loading}>
+        <Table variant="simple" size="sm">
+          <Thead><Tr><Th>Type</Th><Th>Shipment</Th><Th>Info</Th><Th>Severity</Th><Th>Status</Th><Th>Detected</Th><Th>Actions</Th></Tr></Thead>
+          <Tbody>
+            {alerts.length === 0 ? <EmptyStateRow colSpan={7} message="No alerts found." /> : alerts.map(a => (
+              <Tr key={a.id} _hover={{ bg: 'surface.cardHover' }}>
+                <Td><StatusBadge status={a.alert_type} /></Td>
+                <Td fontWeight="600" color="white">{a.shipment_number || '—'}</Td>
+                <Td color="#cbd5e1" maxW="300px" isTruncated>{a.alert_info || '—'}</Td>
+                <Td><StatusBadge status={a.severity} /></Td>
+                <Td><StatusBadge status={a.status} /></Td>
+                <Td color="#94a3b8" fontSize="xs">{fmtDateTime(a.detection_date)}</Td>
+                <Td>
+                  <HStack spacing={1}>
+                    <IconButton aria-label="View" icon={<FiEye />} variant="ghost" size="xs" onClick={() => viewDetail(a.id)} />
+                    {a.status === 'OPEN' && <IconButton aria-label="Ack" icon={<FiCheck />} variant="ghost" size="xs" color="#60a5fa" onClick={() => acknowledge(a.id)} />}
+                    {a.status !== 'RESOLVED' && <IconButton aria-label="Resolve" icon={<FiCheckCircle />} variant="ghost" size="xs" color="#4ade80" onClick={() => openResolve(a)} />}
+                  </HStack>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </DataTableCard>
 
       {/* Detail Modal */}
       <Modal isOpen={detailModal.isOpen} onClose={detailModal.onClose} size="lg">
@@ -121,7 +116,7 @@ export default function Alerts() {
                 <Box><Text fontSize="xs" color="#64748b" textTransform="uppercase">Status</Text><StatusBadge status={selectedAlert.status} /></Box>
                 <Box><Text fontSize="xs" color="#64748b" textTransform="uppercase">Shipment</Text><Text color="white" fontSize="sm">{selectedAlert.shipment_number || '—'}</Text></Box>
                 <Box gridColumn="span 2"><Text fontSize="xs" color="#64748b" textTransform="uppercase">Info</Text><Text color="white" fontSize="sm">{selectedAlert.alert_info || '—'}</Text></Box>
-                <Box><Text fontSize="xs" color="#64748b" textTransform="uppercase">Detected</Text><Text color="white" fontSize="sm">{fmtDate(selectedAlert.detection_date)}</Text></Box>
+                <Box><Text fontSize="xs" color="#64748b" textTransform="uppercase">Detected</Text><Text color="white" fontSize="sm">{fmtDateTime(selectedAlert.detection_date)}</Text></Box>
                 <Box><Text fontSize="xs" color="#64748b" textTransform="uppercase">Action</Text><Text color="white" fontSize="sm">{selectedAlert.action_taken || '—'}</Text></Box>
               </SimpleGrid>
             )}

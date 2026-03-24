@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
-  Box, Table, Thead, Tbody, Tr, Th, Td, Text, Flex, Spinner,
-  Button, IconButton, useToast, useDisclosure, HStack,
+  Box, Table, Thead, Tbody, Tr, Th, Td, Text,
+  Button, IconButton, useToast, useDisclosure,
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
   FormControl, FormLabel, Input, Textarea, Select, VStack, SimpleGrid,
   Divider, Stat, StatLabel, StatNumber,
@@ -9,13 +9,10 @@ import {
 import { FiPlus, FiRefreshCw, FiEye, FiDollarSign } from 'react-icons/fi'
 import { pricingApi } from '../api/pricing'
 import type { Job, Pricing, PricingInput } from '../types'
-import StatusBadge from '../components/StatusBadge'
-import { format } from 'date-fns'
+import { fmtDate } from '../utils/formatters'
 
-function fmtDate(d: string | null) {
-  if (!d) return '—'
-  try { return format(new Date(d), 'dd MMM yyyy') } catch { return d }
-}
+import { PageHeader, DataTableCard, EmptyStateRow } from '../components/common'
+import StatusBadge from '../components/StatusBadge'
 
 export default function PricingPage() {
   const [jobs, setJobs] = useState<Job[]>([])
@@ -117,58 +114,53 @@ export default function PricingPage() {
 
   return (
     <Box>
-      {/* Header */}
-      <Flex justify="space-between" align="center" mb={5}>
-        <Text fontSize="lg" fontWeight="700" color="white">Jobs & Pricing</Text>
-        <HStack>
-          <Button size="sm" leftIcon={<FiPlus />} onClick={createModal.onOpen} borderRadius="8px">New Job</Button>
-          <IconButton aria-label="Refresh" icon={<FiRefreshCw />} variant="ghost" size="sm" borderRadius="8px" onClick={load} />
-        </HStack>
-      </Flex>
+      <PageHeader
+        title="Jobs & Pricing"
+        actions={
+          <>
+            <Button size="sm" leftIcon={<FiPlus />} onClick={createModal.onOpen} borderRadius="8px">New Job</Button>
+            <IconButton aria-label="Refresh" icon={<FiRefreshCw />} variant="ghost" size="sm" borderRadius="8px" onClick={load} />
+          </>
+        }
+      />
 
       {/* Jobs Table */}
-      <Box bg="surface.card" border="1px solid" borderColor="surface.border" borderRadius="14px" overflow="hidden">
-        {loading ? (
-          <Flex justify="center" py={16}><Spinner size="lg" color="brand.400" /></Flex>
-        ) : (
-          <Box overflowX="auto">
-            <Table variant="simple" size="sm">
-              <Thead>
-                <Tr>
-                  <Th>Shipper</Th>
-                  <Th>Consignee</Th>
-                  <Th>Commodity</Th>
-                  <Th>Incoterm</Th>
-                  <Th>Weight</Th>
-                  <Th>CBM</Th>
-                  <Th>Date Needed</Th>
-                  <Th>Status</Th>
-                  <Th></Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {jobs.length === 0 ? (
-                  <Tr><Td colSpan={9} textAlign="center" color="#64748b" py={8}>No jobs found.</Td></Tr>
-                ) : jobs.map(j => (
-                  <Tr key={j.id} _hover={{ bg: 'surface.cardHover' }}>
-                    <Td fontWeight="600" color="white">{j.shipper || '—'}</Td>
-                    <Td color="#cbd5e1">{j.consignee || '—'}</Td>
-                    <Td color="#cbd5e1">{j.commodity || '—'}</Td>
-                    <Td color="#cbd5e1">{j.incoterm || '—'}</Td>
-                    <Td color="#94a3b8">{j.weight ? `${j.weight} kg` : '—'}</Td>
-                    <Td color="#94a3b8">{j.cbm || '—'}</Td>
-                    <Td color="#94a3b8" fontSize="xs">{fmtDate(j.date_needed)}</Td>
-                    <Td><StatusBadge status={j.status} /></Td>
-                    <Td>
-                      <IconButton aria-label="View" icon={<FiEye />} variant="ghost" size="xs" borderRadius="6px" onClick={() => viewDetail(j)} />
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
-        )}
-      </Box>
+      <DataTableCard loading={loading}>
+        <Table variant="simple" size="sm">
+          <Thead>
+            <Tr>
+              <Th>Shipper</Th>
+              <Th>Consignee</Th>
+              <Th>Commodity</Th>
+              <Th>Incoterm</Th>
+              <Th>Weight</Th>
+              <Th>CBM</Th>
+              <Th>Date Needed</Th>
+              <Th>Status</Th>
+              <Th></Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {jobs.length === 0 ? (
+              <EmptyStateRow colSpan={9} message="No jobs found." />
+            ) : jobs.map(j => (
+              <Tr key={j.id} _hover={{ bg: 'surface.cardHover' }}>
+                <Td fontWeight="600" color="white">{j.shipper || '—'}</Td>
+                <Td color="#cbd5e1">{j.consignee || '—'}</Td>
+                <Td color="#cbd5e1">{j.commodity || '—'}</Td>
+                <Td color="#cbd5e1">{j.incoterm || '—'}</Td>
+                <Td color="#94a3b8">{j.weight ? `${j.weight} kg` : '—'}</Td>
+                <Td color="#94a3b8">{j.cbm || '—'}</Td>
+                <Td color="#94a3b8" fontSize="xs">{fmtDate(j.date_needed)}</Td>
+                <Td><StatusBadge status={j.status} /></Td>
+                <Td>
+                  <IconButton aria-label="View" icon={<FiEye />} variant="ghost" size="xs" borderRadius="6px" onClick={() => viewDetail(j)} />
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </DataTableCard>
 
       {/* Detail + Pricing Modal */}
       <Modal isOpen={detailModal.isOpen} onClose={detailModal.onClose} size="3xl" scrollBehavior="inside">

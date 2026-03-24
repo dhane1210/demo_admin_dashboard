@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  Box, Table, Thead, Tbody, Tr, Th, Td, Text, Flex, Spinner,
+  Box, Table, Thead, Tbody, Tr, Th, Td, Text, Flex,
   IconButton, Button, useToast, useDisclosure, HStack,
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
   FormControl, FormLabel, Input, Textarea, VStack, SimpleGrid,
@@ -11,13 +11,9 @@ import { assignmentApi } from '../api/assignments'
 import { alertApi } from '../api/alerts'
 import { shipmentApi } from '../api/shipments'
 import type { Customer, Assignment, Alert, Shipment } from '../types'
+import { fmtDate } from '../utils/formatters'
+import { PageHeader, DataTableCard, EmptyStateRow } from '../components/common'
 import StatusBadge from '../components/StatusBadge'
-import { format } from 'date-fns'
-
-function fmtDate(d: string | null) {
-  if (!d) return '—'
-  try { return format(new Date(d), 'dd MMM yyyy') } catch { return d }
-}
 
 const emptyForm = { name: '', email: '', company: '', phone: '', address: '', contact_person: '', notes: '' }
 
@@ -42,7 +38,6 @@ export default function Users() {
         alertApi.getAll({ status: 'ACTIVE', limit: 1000 }).catch(() => ({ data: [] })),
         shipmentApi.getAll(1, 1000).catch(() => ({ data: [] }))
       ])
-      // CustomerService.getAllCustomers returns { data: [...], total }, so res.data is wrapped
       const list = (res.data as any)?.data || (Array.isArray(res.data) ? res.data : [])
       setCustomers(list)
       setAssignments(assignmentsRes.data || [])
@@ -83,75 +78,41 @@ export default function Users() {
 
   return (
     <Box>
-      <Flex justify="space-between" align="center" mb={5}>
-        <Text fontSize="lg" fontWeight="700" color="white">Customers / Users</Text>
-        <HStack>
-          <Button size="sm" leftIcon={<FiPlus />} onClick={openCreate} borderRadius="8px">Add Customer</Button>
-          <IconButton aria-label="Refresh" icon={<FiRefreshCw />} variant="ghost" size="sm" borderRadius="8px" onClick={load} />
-        </HStack>
-      </Flex>
+      <PageHeader title="Customers / Users" actions={<>
+        <Button size="sm" leftIcon={<FiPlus />} onClick={openCreate} borderRadius="8px">Add Customer</Button>
+        <IconButton aria-label="Refresh" icon={<FiRefreshCw />} variant="ghost" size="sm" borderRadius="8px" onClick={load} />
+      </>} />
 
-      <Box bg="surface.card" border="1px solid" borderColor="surface.border" borderRadius="14px" overflow="hidden">
-        {loading ? <Flex justify="center" py={16}><Spinner size="lg" color="brand.400" /></Flex> : (
-          <Box overflowX="auto">
-            <Table variant="simple" size="sm">
-              <Thead><Tr><Th>Name</Th><Th>Email</Th><Th>Company</Th><Th>Tracking IDs</Th><Th>Shipment Status</Th><Th>Alerts</Th><Th>Phone</Th><Th>Contact Person</Th><Th>Created</Th><Th></Th></Tr></Thead>
-              <Tbody>
-                {customers.length === 0 ? <Tr><Td colSpan={10} textAlign="center" color="#64748b" py={8}>No customers found.</Td></Tr> : customers.map(c => {
-                  const customerAssignments = assignments.filter(a => a.customer_id === c.id)
-                  const trackingIds = [...new Set(customerAssignments.map(a => a.tracking_id))]
-                  const assignedShipmentIds = customerAssignments.map(a => a.shipment_id)
-                  const customerAlerts = alerts.filter(al => assignedShipmentIds.includes(al.shipment_id || ''))
-                  const customerShipments = shipments.filter(s => assignedShipmentIds.includes(s.id))
-                  const statusSet = [...new Set(customerShipments.map(s => s.status).filter(Boolean))]
-
-                  return (
-                  <Tr key={c.id} _hover={{ bg: 'surface.cardHover' }}>
-                    <Td fontWeight="600" color="white">{c.name}</Td>
-                    <Td color="#cbd5e1">{c.email || '—'}</Td>
-                    <Td color="#cbd5e1">{c.company || '—'}</Td>
-                    <Td color="#cbd5e1">
-                        {trackingIds.length > 0 ? (
-                            <Flex flexWrap="wrap" gap={1}>
-                                {trackingIds.map(id => (
-                                    <Text key={id} fontSize="xs" bg="#312e81" color="#a5b4fc" px={2} py={0.5} borderRadius="4px">{id}</Text>
-                                ))}
-                            </Flex>
-                        ) : '—'}
-                    </Td>
-                    <Td>
-                        {statusSet.length > 0 ? (
-                            <Flex flexWrap="wrap" gap={1}>
-                                {statusSet.map(st => (
-                                    <StatusBadge key={st} status={st} />
-                                ))}
-                            </Flex>
-                        ) : '—'}
-                    </Td>
-                    <Td>
-                        {customerAlerts.length > 0 ? (
-                             <Flex align="center" gap={1} color="#f87171">
-                                <FiAlertCircle />
-                                <Text fontSize="xs" fontWeight="bold">{customerAlerts.length} Active</Text>
-                             </Flex>
-                        ) : <Text color="#64748b" fontSize="xs">None</Text>}
-                    </Td>
-                    <Td color="#cbd5e1">{c.phone || '—'}</Td>
-                    <Td color="#cbd5e1">{c.contact_person || '—'}</Td>
-                    <Td color="#94a3b8" fontSize="xs">{fmtDate(c.created_at)}</Td>
-                    <Td>
-                      <HStack spacing={1}>
-                        <IconButton aria-label="Edit" icon={<FiEdit2 />} variant="ghost" size="xs" onClick={() => openEdit(c)} />
-                        <IconButton aria-label="Delete" icon={<FiTrash2 />} variant="ghost" size="xs" color="#f87171" onClick={() => handleDelete(c.id)} />
-                      </HStack>
-                    </Td>
-                  </Tr>
-                )})}
-              </Tbody>
-            </Table>
-          </Box>
-        )}
-      </Box>
+      <DataTableCard loading={loading}>
+        <Table variant="simple" size="sm">
+          <Thead><Tr><Th>Name</Th><Th>Email</Th><Th>Company</Th><Th>Tracking IDs</Th><Th>Shipment Status</Th><Th>Alerts</Th><Th>Phone</Th><Th>Contact Person</Th><Th>Created</Th><Th></Th></Tr></Thead>
+          <Tbody>
+            {customers.length === 0 ? <EmptyStateRow colSpan={10} message="No customers found." /> : customers.map(c => {
+              const ca = assignments.filter(a => a.customer_id === c.id)
+              const tids = [...new Set(ca.map(a => a.tracking_id))]
+              const sids = ca.map(a => a.shipment_id)
+              const cAlerts = alerts.filter(al => sids.includes(al.shipment_id || ''))
+              const cShips = shipments.filter(s => sids.includes(s.id))
+              const statuses = [...new Set(cShips.map(s => s.status).filter(Boolean))]
+              return (
+              <Tr key={c.id} _hover={{ bg: 'surface.cardHover' }}>
+                <Td fontWeight="600" color="white">{c.name}</Td>
+                <Td color="#cbd5e1">{c.email || '—'}</Td>
+                <Td color="#cbd5e1">{c.company || '—'}</Td>
+                <Td>{tids.length > 0 ? <Flex flexWrap="wrap" gap={1}>{tids.map(id => <Text key={id} fontSize="xs" bg="#312e81" color="#a5b4fc" px={2} py={0.5} borderRadius="4px">{id}</Text>)}</Flex> : '—'}</Td>
+                <Td>{statuses.length > 0 ? <Flex flexWrap="wrap" gap={1}>{statuses.map(st => <StatusBadge key={st} status={st} />)}</Flex> : '—'}</Td>
+                <Td>{cAlerts.length > 0 ? <Flex align="center" gap={1} color="#f87171"><FiAlertCircle /><Text fontSize="xs" fontWeight="bold">{cAlerts.length} Active</Text></Flex> : <Text color="#64748b" fontSize="xs">None</Text>}</Td>
+                <Td color="#cbd5e1">{c.phone || '—'}</Td>
+                <Td color="#cbd5e1">{c.contact_person || '—'}</Td>
+                <Td color="#94a3b8" fontSize="xs">{fmtDate(c.created_at)}</Td>
+                <Td><HStack spacing={1}>
+                  <IconButton aria-label="Edit" icon={<FiEdit2 />} variant="ghost" size="xs" onClick={() => openEdit(c)} />
+                  <IconButton aria-label="Delete" icon={<FiTrash2 />} variant="ghost" size="xs" color="#f87171" onClick={() => handleDelete(c.id)} />
+                </HStack></Td>
+              </Tr>)})}
+          </Tbody>
+        </Table>
+      </DataTableCard>
 
       <Modal isOpen={formModal.isOpen} onClose={formModal.onClose} size="xl">
         <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(4px)" />
@@ -161,24 +122,15 @@ export default function Users() {
           <ModalBody py={6}>
             <VStack spacing={4}>
               <SimpleGrid columns={2} spacing={4} w="full">
-                <FormControl isRequired><FormLabel fontSize="sm" color="#94a3b8">Name</FormLabel>
-                  <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></FormControl>
-                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Email</FormLabel>
-                  <Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></FormControl>
-                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Company</FormLabel>
-                  <Input value={form.company} onChange={e => setForm(p => ({ ...p, company: e.target.value }))} /></FormControl>
-                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Phone</FormLabel>
-                  <Input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} /></FormControl>
-                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Contact Person</FormLabel>
-                  <Input value={form.contact_person} onChange={e => setForm(p => ({ ...p, contact_person: e.target.value }))} /></FormControl>
-                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Address</FormLabel>
-                  <Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} /></FormControl>
+                <FormControl isRequired><FormLabel fontSize="sm" color="#94a3b8">Name</FormLabel><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></FormControl>
+                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Email</FormLabel><Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} /></FormControl>
+                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Company</FormLabel><Input value={form.company} onChange={e => setForm(p => ({ ...p, company: e.target.value }))} /></FormControl>
+                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Phone</FormLabel><Input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} /></FormControl>
+                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Contact Person</FormLabel><Input value={form.contact_person} onChange={e => setForm(p => ({ ...p, contact_person: e.target.value }))} /></FormControl>
+                <FormControl><FormLabel fontSize="sm" color="#94a3b8">Address</FormLabel><Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} /></FormControl>
               </SimpleGrid>
-              <FormControl><FormLabel fontSize="sm" color="#94a3b8">Notes</FormLabel>
-                <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={3} /></FormControl>
-              <Button w="full" onClick={handleSave} isLoading={saving} leftIcon={editId ? <FiEdit2 /> : <FiPlus />}>
-                {editId ? 'Update' : 'Create'} Customer
-              </Button>
+              <FormControl><FormLabel fontSize="sm" color="#94a3b8">Notes</FormLabel><Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={3} /></FormControl>
+              <Button w="full" onClick={handleSave} isLoading={saving} leftIcon={editId ? <FiEdit2 /> : <FiPlus />}>{editId ? 'Update' : 'Create'} Customer</Button>
             </VStack>
           </ModalBody>
         </ModalContent>

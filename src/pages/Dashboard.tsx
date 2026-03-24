@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react'
 import {
   Box, SimpleGrid, Table, Thead, Tbody, Tr, Th, Td,
-  Text, Flex, Spinner, IconButton, useToast, Button,
-  Popover, PopoverTrigger, PopoverContent, PopoverBody, PopoverArrow, PopoverCloseButton,
-  VStack
+  Text, Flex, IconButton, useToast, Button,
 } from '@chakra-ui/react'
-import { FiPackage, FiTruck, FiCheckCircle, FiAlertTriangle, FiRefreshCw, FiUsers, FiTrash2 } from 'react-icons/fi'
+import { FiPackage, FiTruck, FiCheckCircle, FiAlertTriangle, FiRefreshCw } from 'react-icons/fi'
 import { shipmentApi } from '../api/shipments'
-import { assignmentApi } from '../api/assignments'
 import { alertApi } from '../api/alerts'
-import type { Shipment, Assignment, Alert } from '../types'
+import type { Shipment, Alert } from '../types'
+
+import { LoadingSpinner, EmptyStateRow } from '../components/common'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
 import ShipmentMap from '../components/ShipmentMap'
 import EtaProgressBar from '../components/EtaProgressBar'
+import { AssignedCustomersPopover } from '../components/shipments'
 
 export default function Dashboard() {
   const [shipments, setShipments] = useState<Shipment[]>([])
@@ -50,13 +50,7 @@ export default function Dashboard() {
 
   useEffect(() => { load() }, [])
 
-  if (loading) {
-    return (
-      <Flex justify="center" align="center" minH="400px">
-        <Spinner size="xl" color="brand.400" thickness="3px" />
-      </Flex>
-    )
-  }
+  if (loading) return <LoadingSpinner />
 
   return (
     <Box>
@@ -72,7 +66,7 @@ export default function Dashboard() {
       <Box mb={8}>
         <Text fontWeight="700" fontSize="lg" color="white" mb={4}>Live Global Tracking Overview</Text>
         <Box bg="surface.card" border="1px solid" borderColor="surface.border" borderRadius="14px" overflow="hidden" p={2}>
-            <ShipmentMap 
+            <ShipmentMap
                 height="450px"
                 shipmentsData={shipments.map(s => s.raw_api_response).filter(Boolean)}
                 shipments={shipments}
@@ -111,7 +105,7 @@ export default function Dashboard() {
               </Thead>
               <Tbody>
                 {shipments.length === 0 ? (
-                  <Tr><Td colSpan={7} textAlign="center" color="#64748b" py={8}>No shipments found. Use Shipments tab to track one.</Td></Tr>
+                  <EmptyStateRow colSpan={7} message="No shipments found. Use Shipments tab to track one." />
                 ) : (
                   shipments.map((s) => (
                     <Tr key={s.id} _hover={{ bg: 'surface.cardHover' }} transition="background 0.15s">
@@ -134,7 +128,7 @@ export default function Dashboard() {
           </Box>
         </Box>
 
-        {/* Live Alerts Widget (takes 1 column on xl screens) */}
+        {/* Live Alerts Widget */}
         <Box gridColumn={{ xl: 'span 1' }} bg="surface.card" border="1px solid" borderColor="surface.border" borderRadius="14px" overflow="hidden">
           <Flex align="center" justify="space-between" px={5} py={4} borderBottom="1px solid" borderColor="surface.border">
             <Text fontWeight="700" fontSize="md" color="white">Live Alerts</Text>
@@ -173,87 +167,5 @@ export default function Dashboard() {
         </Box>
       </SimpleGrid>
     </Box>
-  )
-}
-
-function AssignedCustomersPopover({ shipment_id }: { shipment_id: string }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [loading, setLoading] = useState(false)
-  const toast = useToast()
-
-  const loadAssignments = async () => {
-    setLoading(true)
-    try {
-      const res = await assignmentApi.getAll(1, 50, undefined, shipment_id)
-      setAssignments(res.data || [])
-    } catch (e) {
-      toast({ title: 'Failed to load customers', status: 'error', duration: 2000 })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleOpen = () => {
-    setIsOpen(!isOpen)
-    if (!isOpen) loadAssignments()
-  }
-
-  const handleRemove = async (id: string) => {
-    if (!confirm('Remove this customer assignment?')) return
-    try {
-      await assignmentApi.delete(id)
-      toast({ title: 'Removed', status: 'success', duration: 2000 })
-      loadAssignments()
-    } catch (e) {
-      toast({ title: 'Failed to remove', status: 'error', duration: 2000 })
-    }
-  }
-
-  return (
-    <Popover isOpen={isOpen} onClose={() => setIsOpen(false)} placement="right" preventOverflow>
-      <PopoverTrigger>
-        <IconButton 
-          aria-label="View Customers" 
-          icon={<FiUsers />} 
-          size="sm" 
-          variant="ghost" 
-          color="#a5b4fc"
-          onClick={handleOpen}
-        />
-      </PopoverTrigger>
-      <PopoverContent bg="#1e2133" borderColor="#2d3148" w="300px">
-        <PopoverArrow bg="#1e2133" />
-        <PopoverCloseButton color="white" />
-        <PopoverBody p={4}>
-          <Text fontWeight="600" color="white" mb={3} fontSize="sm">Assigned Customers</Text>
-          {loading ? (
-            <Flex justify="center" p={4}><Spinner size="sm" color="brand.400" /></Flex>
-          ) : assignments.length === 0 ? (
-            <Text fontSize="sm" color="text.muted">No customers assigned yet.</Text>
-          ) : (
-            <VStack align="stretch" spacing={3}>
-              {assignments.map(a => (
-                <Flex key={a.id} justify="space-between" align="center" bg="#12141f" p={2} borderRadius="8px" border="1px solid" borderColor="surface.border">
-                  <Box>
-                    <Text fontSize="sm" fontWeight="600" color="white">{a.customer_name}</Text>
-                    {a.customer_email && <Text fontSize="xs" color="#94a3b8">{a.customer_email}</Text>}
-                    <Text fontSize="xs" color="#6366f1" mt={1}>ID: {a.tracking_id}</Text>
-                  </Box>
-                  <IconButton 
-                    aria-label="Remove" 
-                    icon={<FiTrash2 />} 
-                    size="xs" 
-                    variant="ghost" 
-                    color="#f87171" 
-                    onClick={() => handleRemove(a.id)}
-                  />
-                </Flex>
-              ))}
-            </VStack>
-          )}
-        </PopoverBody>
-      </PopoverContent>
-    </Popover>
   )
 }

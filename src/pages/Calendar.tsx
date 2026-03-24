@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  Box, Text, Flex, Spinner, Button, useToast,
+  Box, Text, Flex, Button, useToast,
   SimpleGrid, HStack, IconButton,
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
   FormControl, FormLabel, Input, Textarea, Select, VStack,
@@ -10,19 +10,8 @@ import { FiPlus, FiRefreshCw, FiTrash2 } from 'react-icons/fi'
 import { calendarApi } from '../api/calendar'
 import type { CalendarEvent } from '../types'
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, addMonths, subMonths } from 'date-fns'
-
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-const eventTypeColors: Record<string, string> = {
-  ETD: '#6366f1',
-  ETA: '#60a5fa',
-  CUTOFF: '#f87171',
-  DELIVERY: '#4ade80',
-  CUSTOM: '#818cf8',
-  SHIPMENT_ETD: '#6366f1',
-  SHIPMENT_ETA: '#60a5fa',
-  SHIPMENT_ATA: '#4ade80',
-}
+import { WEEKDAYS, CALENDAR_EVENT_COLORS } from '../constants'
+import { LoadingSpinner } from '../components/common'
 
 export default function Calendar() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -112,9 +101,7 @@ export default function Calendar() {
       try { return isSameDay(parseISO(e.event_date), day) } catch { return false }
     })
 
-  if (loading) {
-    return <Flex justify="center" align="center" minH="400px"><Spinner size="xl" color="brand.400" /></Flex>
-  }
+  if (loading) return <LoadingSpinner />
 
   return (
     <Box>
@@ -187,13 +174,13 @@ export default function Calendar() {
                       px={2}
                       py={1}
                       borderRadius="4px"
-                      bg={`${ev.color || eventTypeColors[ev.event_type] || '#6366f1'}20`}
+                      bg={`${ev.color || CALENDAR_EVENT_COLORS[ev.event_type] || '#6366f1'}20`}
                       fontSize="xs"
                       cursor="pointer"
                       role="group"
                     >
                       <Text
-                        color={ev.color || eventTypeColors[ev.event_type] || '#818cf8'}
+                        color={ev.color || CALENDAR_EVENT_COLORS[ev.event_type] || '#818cf8'}
                         fontWeight="600"
                         noOfLines={1}
                         flex={1}
@@ -245,7 +232,7 @@ export default function Calendar() {
                 _hover={{ borderColor: 'surface.borderHover' }}
                 transition="all 0.15s"
               >
-                <Box w="4px" h="36px" borderRadius="2px" bg={ev.color || eventTypeColors[ev.event_type] || '#6366f1'} />
+                <Box w="4px" h="36px" borderRadius="2px" bg={ev.color || CALENDAR_EVENT_COLORS[ev.event_type] || '#6366f1'} />
                 <Box flex={1}>
                   <Text fontSize="sm" fontWeight="600" color="white">{ev.title}</Text>
                   <Text fontSize="xs" color="#64748b">{ev.description || ev.event_type}</Text>
